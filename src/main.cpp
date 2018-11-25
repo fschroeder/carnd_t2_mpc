@@ -108,7 +108,7 @@ int main() {
             double delta_x = ptsx[i] - px;
             double delta_y = ptsy[i] - py;
             traj_x.push_back(delta_x * cos(-psi) - delta_y * sin(-psi));
-            traj_y.push_back(delta_y * sin(-psi) + delta_y * cos(-psi));
+            traj_y.push_back(delta_x * sin(-psi) + delta_y * cos(-psi));
           }
 
           double* ptrx = &traj_x[0];
@@ -145,7 +145,7 @@ int main() {
 
           //.. add (x,y) points to list here, points are in reference to the vehicle's coordinate system
           // the points in the simulator are connected by a Green line
-          for (int i = 2; i < vars.size(); i ++) {
+          for (unsigned int i = 2; i < vars.size(); i ++) {
             if (i%2 == 0) {
               mpc_x_vals.push_back(vars[i]);
             }
