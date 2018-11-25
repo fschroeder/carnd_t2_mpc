@@ -1,7 +1,60 @@
 # CarND-Controls-MPC
 Self-Driving Car Engineer Nanodegree Program
-
+![](images/cover.png)
 ---
+
+## Project Description / Rubic Points
+### Compilation: Your code should compile.
+![](images/make.png)
+### Implementation
+#### The model
+> Student describes their model in detail. This includes the state, actuators and update equations.
+
+The state of the vehicle is represented by the following parameters:
+- The position of the car *x* and *y*),
+- The heading of the car *psi*
+- The velocity of the car *v*,
+- The steering angle *delta*
+- The acceleration *a*
+- The mass-offset (wheels and center car's mass) *Lf*
+- The offset between the center of the road and the car *cte*
+- The orientation error *epsi*
+
+The kinematic model is calculated in the following way:
+<!--
+$$ x(t) = x(t-1) + v(t-1) * cos(psi(t-1)) * dt $$
+$$ y(t) = y(t-1) + v(t-1) * sin(psi(t-1)) * dt $$
+$$ \psi(t) = \psi(t-1) - \frac{v(t-1) * \delta * dt}{Lf} $$
+$$ v = v(t-1) + a * dt $$
+$$ cte = f(t-1) - y(t-1) + v(t-1) * sin(epsi(t-1)) * dt $$
+$$ epsi = \psi(t-1) - psides(t-1) - \frac{v(t-1) * \delta * dt}{Lf}  $$
+-->
+![](images/eq.png)
+
+#### Timestep Length and Elapsed Duration (N & dt)
+> Student discusses the reasoning behind the chosen N (timestep length) and dt (elapsed duration between timesteps) values. Additionally the student details the previous values tried.
+
+I started different values. Since I was running the project using VNC i have to reduce it to a lower value. I ended up with the following values, which gives me the best tradeoff between performance and precision:
+
+- *N*: 10
+- *dt*: 0.1
+
+#### Polynomial Fitting and MPC Preprocessing
+> A polynomial is fitted to waypoints. If the student preprocesses waypoints, the vehicle state, and/or actuators prior to the MPC procedure it is described.
+
+Objective of the project is to reduce the *cte* and the *epsi* error by using a 3rd-degree polynomial fitting.
+
+The fitting of the trajectory is in line 102 - 120 in the file main.cpp.
+
+The calculated coefficients are used in line 123 & 124 to re-calculate the *cte* and *epsi*.
+
+#### Model Predictive Control with Latency
+> The student implements Model Predictive Control that handles a 100 millisecond latency. Student provides details on how they deal with latency.
+
+... It was already implemented with 100ms
+
+### Simulation
+Please have a look at the video: https://youtu.be/f_7I8j7bYa4
 
 ## Dependencies
 
