@@ -98,8 +98,43 @@ int main() {
           * Both are in between [-1, 1].
           *
           */
-          double steer_value;
-          double throttle_value;
+
+          //Vector for vehicle trajectory
+          vector<double> traj_x;
+          vector<double> traj_y;
+
+          // Transform px, py and psi to the ego vehicle ones
+          for (int i = 0; i < ptsx.size(); i++) {
+            double delta_x = ptsx[i] - px;
+            double delta_y = ptsy[i] - py;
+            traj_x.push_back(delta_x * cos(-psi) - delta_y * sin(-psi));
+            traj_y.push_back(delta_y * sin(-psi) + delta_y * cos(-psi));
+          }
+
+          double* ptrx = &traj_x[0];
+          double* ptry = &traj_y[0];
+          Eigen::Map<Eigen::VectorXd> traj_x_eig(ptrx, 6);
+          Eigen::Map<Eigen::VectorXd> traj_y_eig(ptry, 6);
+
+          // Fit a 3rd-degree polynomial to the trajectory points
+          auto coeffs = polyfit(traj_x_eig, traj_y_eig, 3);
+
+          // calculate the error
+          double cte = polyeval(coeffs, 0);
+          double epsi = -atan(coeffs[1]); 
+
+          double steer_value = j[1]["steering_angle"];
+          double throttle_value = j[1]["throttle"];
+
+          // Create state vector
+          Eigen::VectorXd state(6);
+          state << 0, 0, 0, v, cte, epsi;
+
+          // Solve using mpc
+          auto vars = mpc.Solve(state, coeffs);
+          
+          double steer_value = vars[0];
+          double throttle_value = vars[1];
 
           json msgJson;
           // NOTE: Remember to divide by deg2rad(25) before you send the steering value back.
