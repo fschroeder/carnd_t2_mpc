@@ -104,7 +104,7 @@ int main() {
           vector<double> traj_y;
 
           // Transform px, py and psi to the ego vehicle ones
-          for (int i = 0; i < ptsx.size(); i++) {
+          for (unsigned int i = 0; i < ptsx.size(); i++) {
             double delta_x = ptsx[i] - px;
             double delta_y = ptsy[i] - py;
             traj_x.push_back(delta_x * cos(-psi) - delta_y * sin(-psi));
@@ -121,10 +121,7 @@ int main() {
 
           // calculate the error
           double cte = polyeval(coeffs, 0);
-          double epsi = -atan(coeffs[1]); 
-
-          double steer_value = j[1]["steering_angle"];
-          double throttle_value = j[1]["throttle"];
+          double epsi = -atan(coeffs[1]);
 
           // Create state vector
           Eigen::VectorXd state(6);
@@ -132,8 +129,8 @@ int main() {
 
           // Solve using mpc
           auto vars = mpc.Solve(state, coeffs);
-          
-          double steer_value = vars[0];
+
+          double steer_value = vars[0]/(deg2rad(25));
           double throttle_value = vars[1];
 
           json msgJson;
@@ -142,12 +139,20 @@ int main() {
           msgJson["steering_angle"] = steer_value;
           msgJson["throttle"] = throttle_value;
 
-          //Display the MPC predicted trajectory 
+          //Display the MPC predicted trajectory
           vector<double> mpc_x_vals;
           vector<double> mpc_y_vals;
 
           //.. add (x,y) points to list here, points are in reference to the vehicle's coordinate system
           // the points in the simulator are connected by a Green line
+          for (int i = 2; i < vars.size(); i ++) {
+            if (i%2 == 0) {
+              mpc_x_vals.push_back(vars[i]);
+            }
+            else {
+              mpc_y_vals.push_back(vars[i]);
+            }
+          }
 
           msgJson["mpc_x"] = mpc_x_vals;
           msgJson["mpc_y"] = mpc_y_vals;
@@ -158,6 +163,10 @@ int main() {
 
           //.. add (x,y) points to list here, points are in reference to the vehicle's coordinate system
           // the points in the simulator are connected by a Yellow line
+          for (double i = 0; i < 100; i += 3){
+            next_x_vals.push_back(i);
+            next_y_vals.push_back(polyeval(coeffs, i));
+          }
 
           msgJson["next_x"] = next_x_vals;
           msgJson["next_y"] = next_y_vals;

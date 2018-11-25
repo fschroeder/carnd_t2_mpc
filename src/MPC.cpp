@@ -8,7 +8,7 @@ using CppAD::AD;
 // TODO: Set the timestep length and duration
 size_t N = 10;
 double dt = 0.1;
-double v_ref = 100.0;
+double v_ref = 30.0;
 
 size_t x_start = 0;
 size_t y_start = x_start + N;
@@ -49,14 +49,15 @@ class FG_eval {
 
 
     for (unsigned int t = 0; t < N; t++) {
-      fg[0] += 10000*CppAD::pow(vars[cte_start + t], 2); 
-      fg[0] += 10000*CppAD::pow(vars[epsi_start + t], 2);
-      fg[0] += 5*CppAD::pow(vars[v_start + t] - v_ref, 2);
+      fg[0] += 8000*CppAD::pow(vars[cte_start + t], 2);
+      fg[0] += 8000*CppAD::pow(vars[epsi_start + t], 2);
+      fg[0] += 3*CppAD::pow(vars[v_start + t] - v_ref, 2);
     }
 
     for (unsigned int t = 0; t < N - 1; t++) {
-      fg[0] += 250*CppAD::pow((vars[delta_start + t]/(0.436332*Lf))*vars[a_start + t], 2);
-      fg[0] += 50*CppAD::pow(vars[delta_start + t], 2);
+      fg[0] += 250*CppAD::pow(vars[delta_start + t], 2);
+      fg[0] += 50*CppAD::pow(vars[a_start + t], 2);
+      //fg[0] += 700*CppAD::pow(vars[delta_start + t] * vars[v_start+t], 2);
     }
 
     for (unsigned int t = 0; t < N - 2; t++) {
@@ -81,7 +82,7 @@ class FG_eval {
       AD<double> v0 = vars[v_start + t - 1];
       AD<double> cte0 = vars[cte_start + t - 1];
       AD<double> epsi0 = vars[epsi_start + t - 1];
-      
+
       // t = 1
       AD<double> x1 = vars[x_start + t];
       AD<double> y1 = vars[y_start + t];
@@ -93,7 +94,7 @@ class FG_eval {
       // Actuation (t = 0)
       AD<double> a = vars[a_start + t - 1];
       AD<double> delta = vars[delta_start + t - 1];
-      
+
       AD<double> f0 = coeffs[0] + coeffs[1] * x0 + coeffs[2] * CppAD::pow(x0, 2) + coeffs[3] * CppAD::pow(x0, 3);
       AD<double> psides0 = CppAD::atan(coeffs[1] + 2 * coeffs[2] * x0 + 3 * coeffs[3] * CppAD::pow(x0, 2));
 
@@ -123,7 +124,6 @@ MPC::~MPC() {}
 
 vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
   bool ok = true;
-  size_t i;
   typedef CPPAD_TESTVECTOR(double) Dvector;
 
   double x = state[0];
@@ -164,8 +164,8 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
   Dvector vars_upperbound(n_vars);
   // TODO: Set lower and upper limits for variables.
   for (unsigned int i = 0; i < delta_start; i++) {
-    vars_lowerbound[i] = -1.0e19;
-    vars_upperbound[i] = 1.0e19;
+    vars_lowerbound[i] = -1.0e10;
+    vars_upperbound[i] = 1.0e10;
   }
 
   // Set the range of delta values to [-25, 25] in radians
@@ -175,7 +175,7 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
   }
 
   // Set the range of acceleration values to [-1, 1]
-  for (unsigned int i = delta_start; i < a_start; i++) {
+  for (unsigned int i = a_start; i < n_vars; i++) {
     vars_lowerbound[i] = -1.0;
     vars_upperbound[i] = 1.0;
   }
@@ -254,10 +254,10 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
   result.push_back(solution.x[delta_start]);
   result.push_back(solution.x[a_start]);
 
-  for(i=0; i< N-1; i++){
+  for(unsigned int i = 0; i < N-1; i++){
     result.push_back(solution.x[x_start + i + 1]);
     result.push_back(solution.x[y_start + i + 1]);
   }
-  
+
   return result;
 }
