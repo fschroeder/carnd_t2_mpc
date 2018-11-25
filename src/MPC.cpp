@@ -8,7 +8,7 @@ using CppAD::AD;
 // TODO: Set the timestep length and duration
 size_t N = 10;
 double dt = 0.1;
-double v_ref = 30.0;
+double v_ref = 50.0;
 
 size_t x_start = 0;
 size_t y_start = x_start + N;
@@ -49,20 +49,19 @@ class FG_eval {
 
 
     for (unsigned int t = 0; t < N; t++) {
-      fg[0] += 8000*CppAD::pow(vars[cte_start + t], 2);
-      fg[0] += 8000*CppAD::pow(vars[epsi_start + t], 2);
-      fg[0] += 3*CppAD::pow(vars[v_start + t] - v_ref, 2);
+      fg[0] += 2000*CppAD::pow(vars[cte_start + t], 2);
+      fg[0] += 2000*CppAD::pow(vars[epsi_start + t], 2);
+      fg[0] += CppAD::pow(vars[v_start + t] - v_ref, 2);
     }
 
     for (unsigned int t = 0; t < N - 1; t++) {
-      fg[0] += 250*CppAD::pow(vars[delta_start + t], 2);
+      fg[0] += 50*CppAD::pow(vars[delta_start + t], 2);
       fg[0] += 50*CppAD::pow(vars[a_start + t], 2);
-      //fg[0] += 700*CppAD::pow(vars[delta_start + t] * vars[v_start+t], 2);
     }
 
     for (unsigned int t = 0; t < N - 2; t++) {
-      fg[0] += 5*CppAD::pow(vars[delta_start + t + 1] - vars[delta_start + t], 2);
-      fg[0] += 5*CppAD::pow(vars[a_start + t + 1] - vars[a_start + t], 2);
+      fg[0] += 300000*CppAD::pow(vars[delta_start + t + 1] - vars[delta_start + t], 2);
+      fg[0] += 10000*CppAD::pow(vars[a_start + t + 1] - vars[a_start + t], 2);
     }
 
     // Costfunction constrints
@@ -164,8 +163,8 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
   Dvector vars_upperbound(n_vars);
   // TODO: Set lower and upper limits for variables.
   for (unsigned int i = 0; i < delta_start; i++) {
-    vars_lowerbound[i] = -1.0e10;
-    vars_upperbound[i] = 1.0e10;
+    vars_lowerbound[i] = -1.0e8;
+    vars_upperbound[i] = 1.0e8;
   }
 
   // Set the range of delta values to [-25, 25] in radians
